@@ -44,10 +44,24 @@ export default function Login() {
         <div className="login-container">
 
             <h1 className="logo-title">
-                <span>💰</span>
-                <span className="logo-title-text">FinanceIT</span>
-                <span>💰</span>   
+
+                <div className="logo-top">
+                    <span>💰</span>
+                    <span>FinanceIT</span>
+                    <span>💰</span>
+                </div>
+
+                <div className="logo-bottom">
+                    <span>💰</span>
+                    <span>FinanceIT</span>
+                    <span>💰</span>
+                </div>
+
+                <div className="logo-middle">
+                    Make finances simple.
+                </div>
             </h1>
+
             <div className="login-box">
                 <h2>Sign in to your account</h2>
                 {error && <div className="error">{error}</div>}
