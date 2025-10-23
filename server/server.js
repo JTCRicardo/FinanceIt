@@ -37,14 +37,18 @@ app.use('*', (req, res) => {
 // Database connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('MongoDB connected successfully');
+    if (process.env.MONGODB_URI) {
+      await mongoose.connect(process.env.MONGODB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      console.log('MongoDB connected successfully');
+    } else {
+      console.log('No MongoDB URI provided - running without database');
+    }
   } catch (error) {
     console.error('Database connection error:', error);
-    process.exit(1);
+    console.log('Continuing without database connection...');
   }
 };
 

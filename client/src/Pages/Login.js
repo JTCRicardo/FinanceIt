@@ -1,35 +1,43 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useSignIn, useClerk } from '@clerk/clerk-react';
 import './Login.css';
 export default function Login() {
+    const { signIn, setActive } = useSignIn();
+    const { signOut } = useClerk();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
+    //WORK IN PROGRESS
+    //const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     //states used for the user to type in their info/for program to respond
+
+    // Sign out any existing user when component mounts
+    useEffect(() => {
+        signOut();
+    }, [signOut]);
 
     //function that handles when user clicks sign in
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         try {
-            //send a login request and receive a response object
-            const response = await fetch('/api/auth/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, password }),  
+            console.log('Attempting login with:', { email, password: '***' });
+            const response = await signIn.create({
+                identifier: email,
+                password: password,
             });
-            //parse the response body as JSON
-            const data = await response.json();
-            if (response.ok) {
+            console.log('Clerk login response:', response);
+            if (response.status === 'complete') {
+                setActive({ session: response.createdSessionId });
                 navigate('/dashboard');
             } else {
-                //can add more error messages later
-                setError(data.message || "Login failed");
+                setError(response?.errors?.[0]?.longMessage || 'Unexpected response from Clerk.');
             }
         } catch (err) {
-            setError("Server error");
+            console.error('Login error:', err);
+            setError(err?.errors?.[0]?.longMessage || "An error occurred. Please try again.");
         }
     };
     return(
@@ -62,7 +70,7 @@ export default function Login() {
                 </form>
                 <div className="login-footer">
                     <div><a href="#">Forgot password?</a></div>
-                    <div>New to FinanceIt? <a href="#">Create an account</a></div>
+                    <div>New to FinanceIt? <Link to="/signup">Create an account</Link></div>
                 </div>
             </div>
         </div>
