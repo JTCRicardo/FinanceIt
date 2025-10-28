@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './Pages/Login';
 import Signup from './Pages/Signup';
 import Dashboard from './Pages/Dashboard';
+import BudgetEntry from './Pages/BudgetEntry';
+import BudgetEntriesDisplay from './Pages/BudgetEntriesDisplay';
 import './App.css';
 
 //so we're using react router to setup multiple homepages
@@ -14,6 +16,8 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/budget-entry" element={<BudgetEntry />} />
+        <Route path="/budget-entries" element={<BudgetEntriesDisplay />} />
       </Routes>
     </Router>
   );

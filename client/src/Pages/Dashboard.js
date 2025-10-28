@@ -188,15 +188,54 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div style={{ padding: '40px 24px' }}>
-        <div style={{ 
-          maxWidth: '1200px', 
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '24px'
-        }}>
+          {/* Main Content */}
+          <div style={{ padding: '40px 24px' }}>
+            <div style={{ 
+              maxWidth: '1200px', 
+              margin: '0 auto',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '24px'
+            }}>
+          {/* Budget Entry */}
+          <div 
+            onClick={() => navigate('/budget-entry')}
+            style={{
+              backgroundColor: 'white',
+              border: '1px solid #d0d7de',
+              borderRadius: '8px',
+              padding: '24px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+              e.target.style.transform = 'translateY(-2px)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+              e.target.style.transform = 'translateY(0)';
+            }}
+          >
+            <h3 style={{ 
+              margin: '0 0 12px 0', 
+              fontSize: '1.25rem', 
+              fontWeight: '600',
+              color: '#24292f'
+            }}>
+              💰 Budget Entry
+            </h3>
+            <p style={{ 
+              margin: '0', 
+              color: '#656d76', 
+              fontSize: '14px',
+              lineHeight: '1.5'
+            }}>
+              Track your income and expenses with detailed budget entries and categories.
+            </p>
+          </div>
+
           {/* Inventory Logging */}
           <div style={{
             backgroundColor: 'white',
