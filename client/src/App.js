@@ -6,7 +6,8 @@ import Dashboard from './Pages/Dashboard';
 import BudgetEntry from './Pages/BudgetEntry';
 import BudgetEntriesDisplay from './Pages/BudgetEntriesDisplay';
 import './App.css';
-
+import InventoryLog from './Pages/InventoryLog';
+import InventoryLogDisplay from './Pages/InventoryLogDisplay';
 //so we're using react router to setup multiple homepages
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/budget-entry" element={<BudgetEntry />} />
         <Route path="/budget-entries" element={<BudgetEntriesDisplay />} />
+        <Route path="/inventory-log" element={<InventoryLog />} />
+        <Route path="/inventory-logs" element={<InventoryLogDisplay />} />
       </Routes>
     </Router>
   );

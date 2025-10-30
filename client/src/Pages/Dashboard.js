@@ -237,7 +237,9 @@ export default function Dashboard() {
           </div>
 
           {/* Inventory Logging */}
-          <div style={{
+          <div 
+          onClick={() => navigate('/inventory-log')}
+          style={{
             backgroundColor: 'white',
             border: '1px solid #d0d7de',
             borderRadius: '8px',
