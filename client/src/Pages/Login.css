@@ -62,7 +62,7 @@
     border-radius: 4px;
     text-align: center;
   }
-.logo-title {
+.login-container .logo-title {
   position: relative; 
   font-family: 'Poppins', sans-serif;
   font-size: 6.5rem; 
@@ -87,7 +87,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .logo-bottom {
@@ -102,7 +102,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 
