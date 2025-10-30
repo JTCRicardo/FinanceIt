@@ -229,4 +229,29 @@
       gap: 12px;
     }
   }
+  .revenue-calculator {
+    margin-top: 2rem;
+    padding: 1rem;
+    border-top: 1px solid #ccc;
+  }
+  
+  .revenue-calculator select,
+  .revenue-calculator input {
+    margin-right: 1rem;
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+  
+  .revenue-calculator button {
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .revenue-calculator button:hover {
+    background-color: #0056b3;
+  }
   

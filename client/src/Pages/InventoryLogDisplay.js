@@ -10,6 +10,11 @@ export default function InventoryLogDisplay() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Revenue calculator state
+  const [selectedItemId, setSelectedItemId] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [revenue, setRevenue] = useState(null);
+
   useEffect(() => {
     fetchInventoryLogs();
   }, []);
@@ -54,6 +59,14 @@ export default function InventoryLogDisplay() {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  const handleRevenueCalculation = () => {
+    const item = inventoryLogs.find(log => log._id === selectedItemId);
+    if (item && quantity) {
+      const calculated = parseFloat(item.cost) * parseInt(quantity);
+      setRevenue(calculated.toFixed(2));
+    }
   };
 
   if (loading) {
@@ -121,6 +134,41 @@ export default function InventoryLogDisplay() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ✅ Revenue Calculator Section */}
+        {inventoryLogs.length > 0 && (
+          <div className="revenue-calculator">
+            <h3>📈 Calculate Revenue</h3>
+
+            <select
+              value={selectedItemId}
+              onChange={(e) => setSelectedItemId(e.target.value)}
+            >
+              <option value="">Select an item</option>
+              {inventoryLogs.map(log => (
+                <option key={log._id} value={log._id}>
+                  {log.title} (${log.cost})
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="number"
+              placeholder="Enter quantity"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              min="1"
+            />
+
+            <button onClick={handleRevenueCalculation}>
+              Calculate Revenue
+            </button>
+
+            {revenue !== null && (
+              <p><strong>Estimated Revenue:</strong> ${revenue}</p>
+            )}
           </div>
         )}
 
