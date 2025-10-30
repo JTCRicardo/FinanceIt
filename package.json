@@ -7,9 +7,10 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",
+    "install-concurrently": "npm install --save-dev concurrently",
     "install-server": "cd server && npm install",
     "install-client": "cd client && npm install",
-    "install-all": "npm run install-server && npm run install-client",
+    "install-all": "npm run install-concurrently && npm run install-server && npm run install-client",
     "build": "cd client && npm run build",
     "start": "cd server && npm start"
   },
@@ -24,7 +25,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "concurrently": "^7.2.2"
+    "concurrently": "^7.6.0"
   },
   "dependencies": {
     "mongodb": "^6.20.0"
