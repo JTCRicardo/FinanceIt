@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
+import RevenueVisualization from './RevenueVisualization';
 import './InventoryLogDisplay.css';
 
 export default function InventoryLogDisplay() {
@@ -94,6 +95,9 @@ export default function InventoryLogDisplay() {
         </div>
 
         {error && <div className="error-message">{error}</div>}
+
+        {/* Revenue Visualization Chart */}
+        <RevenueVisualization inventoryLogs={inventoryLogs} />
 
         {inventoryLogs.length === 0 ? (
           <div className="no-entries">
