@@ -5,6 +5,8 @@ import Signup from './Pages/Signup';
 import Dashboard from './Pages/Dashboard';
 import BudgetEntry from './Pages/BudgetEntry';
 import BudgetEntriesDisplay from './Pages/BudgetEntriesDisplay';
+import Settings from './Pages/Settings';
+import Profile from './Pages/Profile';
 import './App.css';
 import InventoryLog from './Pages/InventoryLog';
 import InventoryLogDisplay from './Pages/InventoryLogDisplay';
@@ -21,6 +23,8 @@ function App() {
         <Route path="/budget-entries" element={<BudgetEntriesDisplay />} />
         <Route path="/inventory-log" element={<InventoryLog />} />
         <Route path="/inventory-logs" element={<InventoryLogDisplay />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </Router>
   );

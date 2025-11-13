@@ -123,7 +123,7 @@ export default function Dashboard() {
                 <button 
                   onClick={() => {
                     setShowDropdown(false);
-                    // Add settings navigation here
+                    navigate('/settings');
                   }}
                   style={{
                     width: '100%',
@@ -144,7 +144,7 @@ export default function Dashboard() {
                 <button 
                   onClick={() => {
                     setShowDropdown(false);
-                    // Add profile navigation here
+                    navigate('/profile');
                   }}
                   style={{
                     width: '100%',
