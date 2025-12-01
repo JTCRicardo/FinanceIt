@@ -7,16 +7,19 @@ import BudgetEntry from './Pages/BudgetEntry';
 import BudgetEntriesDisplay from './Pages/BudgetEntriesDisplay';
 import Settings from './Pages/Settings';
 import Profile from './Pages/Profile';
+import Home from './Pages/Home';
 import './App.css';
 import InventoryLog from './Pages/InventoryLog';
 import InventoryLogDisplay from './Pages/InventoryLogDisplay';
 //so we're using react router to setup multiple homepages
+//human written file
 function App() {
   return (
     <Router>
       <Routes>
         {/* current homepage */}
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/budget-entry" element={<BudgetEntry />} />
