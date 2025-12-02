@@ -1,0 +1,337 @@
+.dashboard-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  color: #c9d1d9;
+}
+
+/* Navigation Bar */
+.dashboard-navbar {
+  background-color: rgba(13, 17, 23, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #21262d;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dashboard-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e6edf3;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.dashboard-brand:hover {
+  opacity: 0.8;
+}
+
+.dashboard-brand img {
+  height: 32px;
+  width: auto;
+  filter: brightness(1.2);
+}
+
+/* User Dropdown */
+.user-dropdown-container {
+  position: relative;
+}
+
+.user-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.user-dropdown-trigger:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #8b949e;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #238636, #2ea043);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  opacity: 0.7;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  min-width: 200px;
+  z-index: 1000;
+  overflow: hidden;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #21262d;
+}
+
+.dropdown-username {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e6edf3;
+}
+
+.dropdown-email {
+  font-size: 12px;
+  color: #8b949e;
+  margin-top: 2px;
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  background: transparent;
+  color: #c9d1d9;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-item.danger {
+  color: #f85149;
+}
+
+.dropdown-item.danger:hover {
+  background-color: rgba(248, 81, 73, 0.1);
+}
+
+.dropdown-divider {
+  border-top: 1px solid #21262d;
+}
+
+/* Main Content */
+.dashboard-content {
+  padding: 48px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.dashboard-greeting {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #e6edf3;
+  margin: 0 0 12px 0;
+}
+
+.dashboard-subtext {
+  font-size: 1.1rem;
+  color: #8b949e;
+  margin: 0;
+}
+
+/* Feature Cards Grid */
+.feature-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.feature-card {
+  background: rgba(200, 200, 220, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card.budget::before {
+  background: linear-gradient(90deg, #238636, #2ea043);
+}
+
+.feature-card.inventory::before {
+  background: linear-gradient(90deg, #0969da, #58a6ff);
+}
+
+.feature-card.payroll::before {
+  background: linear-gradient(90deg, #a371f7, #8957e5);
+}
+
+.feature-card.visualizations::before {
+  background: linear-gradient(90deg, #f0883e, #d29922);
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+.feature-card-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.feature-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e6edf3;
+  margin: 0 0 10px 0;
+}
+
+.feature-card-description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #8b949e;
+  margin: 0;
+}
+
+.feature-card-arrow {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  font-size: 20px;
+  color: #8b949e;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Stats Section */
+.stats-section {
+  margin-top: 48px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #21262d;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e6edf3;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard-navbar {
+    padding: 12px 16px;
+  }
+
+  .dashboard-brand {
+    font-size: 1.25rem;
+  }
+
+  .dashboard-content {
+    padding: 32px 16px;
+  }
+
+  .dashboard-greeting {
+    font-size: 1.75rem;
+  }
+
+  .feature-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+

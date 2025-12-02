@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useClerk, useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import './Dashboard.css';
 
 export default function Dashboard() {
   const { signOut } = useClerk();
@@ -17,336 +18,134 @@ export default function Dashboard() {
     setShowDropdown(!showDropdown);
   };
 
+  const userName = user?.username || user?.firstName || 'there';
+  const userInitial = user?.username?.charAt(0).toUpperCase() || 
+                      user?.firstName?.charAt(0).toUpperCase() || 
+                      user?.emailAddresses?.[0]?.emailAddress?.charAt(0).toUpperCase() || 'U';
+  const displayName = user?.username || user?.emailAddresses?.[0]?.emailAddress || 'User';
+
+  const features = [
+    {
+      id: 'budget',
+      icon: '💰',
+      title: 'Budget Entry',
+      description: 'Track your income and expenses with detailed budget entries and categories.',
+      route: '/budget-entry',
+      className: 'budget'
+    },
+    {
+      id: 'inventory',
+      icon: '📦',
+      title: 'Inventory Logging',
+      description: 'Track and manage your business inventory, stock levels, and product movements.',
+      route: '/inventory-log',
+      className: 'inventory'
+    },
+    {
+      id: 'payroll',
+      icon: '💼',
+      title: 'Payroll Management',
+      description: 'Manage employee salaries, hourly rates, and payroll processing efficiently.',
+      route: '/payroll',
+      className: 'payroll'
+    },
+    {
+      id: 'visualizations',
+      icon: '📊',
+      title: 'Visualizations',
+      description: 'Create charts and graphs to visualize your budget and financial data.',
+      route: '/visualizations',
+      className: 'visualizations'
+    }
+  ];
+
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f6f8fa',
-      fontFamily: 'Arial, sans-serif'
-    }}>
+    <div className="dashboard-page">
       {/* Navigation Bar */}
-      <nav style={{
-        backgroundColor: 'white',
-        borderBottom: '1px solid #d0d7de',
-        padding: '16px 24px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '12px',
-          fontSize: '1.5rem', 
-          fontWeight: 'bold', 
-          color: '#24292f' 
-        }}>
-          <img 
-            src="/Photos/FinanceITlogo.png" 
-            alt="FinanceIT Logo" 
-            style={{ 
-              height: '32px', 
-              width: 'auto' 
-            }} 
-          />
+      <nav className="dashboard-navbar">
+        <div className="dashboard-brand" onClick={() => navigate('/dashboard')}>
+          <img src="/Photos/FinanceITlogo.png" alt="FinanceIT Logo" />
           FinanceIT
         </div>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* User Dropdown */}
-          <div style={{ position: 'relative' }}>
-            <button 
-              onClick={toggleDropdown}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 12px',
-                fontSize: '14px',
-                backgroundColor: 'transparent',
-                color: '#24292f',
-                border: '1px solid #d0d7de',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: '500'
-              }}
-            >
-              <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                backgroundColor: '#0969da',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                fontWeight: '600'
-              }}>
-                {user?.username?.charAt(0).toUpperCase() || user?.emailAddresses?.[0]?.emailAddress?.charAt(0).toUpperCase() || 'U'}
+
+        <div className="user-dropdown-container">
+          <button className="user-dropdown-trigger" onClick={toggleDropdown}>
+            <div className="user-avatar">{userInitial}</div>
+            {displayName}
+            <span className={`dropdown-arrow ${showDropdown ? 'open' : ''}`}>▼</span>
+          </button>
+
+          {showDropdown && (
+            <div className="user-dropdown-menu">
+              <div className="dropdown-header">
+                <div className="dropdown-username">{user?.username || 'User'}</div>
+                <div className="dropdown-email">{user?.emailAddresses?.[0]?.emailAddress}</div>
               </div>
-              {user?.username || user?.emailAddresses?.[0]?.emailAddress || 'User'}
-              <span style={{ fontSize: '12px' }}>▼</span>
-            </button>
-            
-            {showDropdown && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                right: '0',
-                marginTop: '4px',
-                backgroundColor: 'white',
-                border: '1px solid #d0d7de',
-                borderRadius: '6px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                minWidth: '160px',
-                zIndex: 1000
-              }}>
-                <div style={{
-                  padding: '8px 0',
-                  borderBottom: '1px solid #f6f8fa'
-                }}>
-                  <div style={{
-                    padding: '8px 16px',
-                    fontSize: '12px',
-                    color: '#656d76',
-                    fontWeight: '600'
-                  }}>
-                    {user?.username || 'User'}
-                  </div>
-                  <div style={{
-                    padding: '0 16px 8px',
-                    fontSize: '12px',
-                    color: '#656d76'
-                  }}>
-                    {user?.emailAddresses?.[0]?.emailAddress}
-                  </div>
-                </div>
-                <button 
-                  onClick={() => {
-                    setShowDropdown(false);
-                    navigate('/settings');
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    backgroundColor: 'transparent',
-                    color: '#24292f',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  ⚙️ Settings
-                </button>
-                <button 
-                  onClick={() => {
-                    setShowDropdown(false);
-                    navigate('/profile');
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    backgroundColor: 'transparent',
-                    color: '#24292f',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  👤 Profile
-                </button>
-                <div style={{ borderTop: '1px solid #f6f8fa' }}>
-                  <button 
-                    onClick={handleSignOut}
-                    style={{
-                      width: '100%',
-                      padding: '8px 16px',
-                      fontSize: '14px',
-                      backgroundColor: 'transparent',
-                      color: '#dc3545',
-                      border: 'none',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
-                  >
-                    🚪 Sign Out
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  setShowDropdown(false);
+                  navigate('/settings');
+                }}
+              >
+                ⚙️ Settings
+              </button>
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  setShowDropdown(false);
+                  navigate('/profile');
+                }}
+              >
+                👤 Profile
+              </button>
+              <div className="dropdown-divider" />
+              <button className="dropdown-item danger" onClick={handleSignOut}>
+                🚪 Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </nav>
 
-          {/* Main Content */}
-          <div style={{ padding: '40px 24px' }}>
-            <div style={{ 
-              maxWidth: '1200px', 
-              margin: '0 auto',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '24px'
-            }}>
-          {/* Budget Entry */}
-          <div 
-            onClick={() => navigate('/budget-entry')}
-            style={{
-              backgroundColor: 'white',
-              border: '1px solid #d0d7de',
-              borderRadius: '8px',
-              padding: '24px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-            }}
-            onMouseOver={(e) => {
-              e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-              e.target.style.transform = 'translateY(-2px)';
-            }}
-            onMouseOut={(e) => {
-              e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-              e.target.style.transform = 'translateY(0)';
-            }}
-          >
-            <h3 style={{ 
-              margin: '0 0 12px 0', 
-              fontSize: '1.25rem', 
-              fontWeight: '600',
-              color: '#24292f'
-            }}>
-              💰 Budget Entry
-            </h3>
-            <p style={{ 
-              margin: '0', 
-              color: '#656d76', 
-              fontSize: '14px',
-              lineHeight: '1.5'
-            }}>
-              Track your income and expenses with detailed budget entries and categories.
-            </p>
-          </div>
+      {/* Main Content */}
+      <div className="dashboard-content">
+        <div className="dashboard-header">
+          <h1 className="dashboard-greeting">Welcome back, {userName}!</h1>
+          <p className="dashboard-subtext">What would you like to manage today?</p>
+        </div>
 
-          {/* Inventory Logging */}
-          <div 
-          onClick={() => navigate('/inventory-log')}
-          style={{
-            backgroundColor: 'white',
-            border: '1px solid #d0d7de',
-            borderRadius: '8px',
-            padding: '24px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}
-          onMouseOver={(e) => {
-            e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            e.target.style.transform = 'translateY(-2px)';
-          }}
-          onMouseOut={(e) => {
-            e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-            e.target.style.transform = 'translateY(0)';
-          }}
-          >
-            <h3 style={{ 
-              margin: '0 0 12px 0', 
-              fontSize: '1.25rem', 
-              fontWeight: '600',
-              color: '#24292f'
-            }}>
-              📦 Inventory Logging
-            </h3>
-            <p style={{ 
-              margin: '0', 
-              color: '#656d76', 
-              fontSize: '14px',
-              lineHeight: '1.5'
-            }}>
-              Track and manage your business inventory, stock levels, and product movements.
-            </p>
-          </div>
+        <div className="feature-cards-grid">
+          {features.map((feature) => (
+            <div
+              key={feature.id}
+              className={`feature-card ${feature.className}`}
+              onClick={() => navigate(feature.route)}
+            >
+              <span className="feature-card-icon">{feature.icon}</span>
+              <h3 className="feature-card-title">{feature.title}</h3>
+              <p className="feature-card-description">{feature.description}</p>
+              <span className="feature-card-arrow">→</span>
+            </div>
+          ))}
+        </div>
 
-          {/* Payroll Management */}
-          <div style={{
-            backgroundColor: 'white',
-            border: '1px solid #d0d7de',
-            borderRadius: '8px',
-            padding: '24px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}
-          onMouseOver={(e) => {
-            e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            e.target.style.transform = 'translateY(-2px)';
-          }}
-          onMouseOut={(e) => {
-            e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-            e.target.style.transform = 'translateY(0)';
-          }}
-          >
-            <h3 style={{ 
-              margin: '0 0 12px 0', 
-              fontSize: '1.25rem', 
-              fontWeight: '600',
-              color: '#24292f'
-            }}>
-              💰 Payroll Management
-            </h3>
-            <p style={{ 
-              margin: '0', 
-              color: '#656d76', 
-              fontSize: '14px',
-              lineHeight: '1.5'
-            }}>
-              Manage employee salaries, benefits, and payroll processing efficiently.
-            </p>
+        <div className="stats-section">
+          <div className="stat-card">
+            <div className="stat-value">4</div>
+            <div className="stat-label">Active Modules</div>
           </div>
-
-          {/* Visualizations */}
-          <div style={{
-            backgroundColor: 'white',
-            border: '1px solid #d0d7de',
-            borderRadius: '8px',
-            padding: '24px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}
-          onMouseOver={(e) => {
-            e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            e.target.style.transform = 'translateY(-2px)';
-          }}
-          onMouseOut={(e) => {
-            e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-            e.target.style.transform = 'translateY(0)';
-          }}
-          >
-            <h3 style={{ 
-              margin: '0 0 12px 0', 
-              fontSize: '1.25rem', 
-              fontWeight: '600',
-              color: '#24292f'
-            }}>
-              📊 Visualizations
-            </h3>
-            <p style={{ 
-              margin: '0', 
-              color: '#656d76', 
-              fontSize: '14px',
-              lineHeight: '1.5'
-            }}>
-              Create charts, graphs, and reports to visualize your financial data.
-            </p>
+          <div className="stat-card">
+            <div className="stat-value">—</div>
+            <div className="stat-label">Budget Entries</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">—</div>
+            <div className="stat-label">Inventory Items</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">—</div>
+            <div className="stat-label">Employees</div>
           </div>
         </div>
       </div>
