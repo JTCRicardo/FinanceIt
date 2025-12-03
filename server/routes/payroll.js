@@ -1,7 +1,12 @@
 const express = require('express');
 const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 const Payroll = require('../models/Payroll');
+const Employee = require('../models/Employee');
 const router = express.Router();
+
+// =============================================
+// PAYROLL ENTRY ROUTES (Your Implementation)
+// =============================================
 
 // @route   POST /api/payroll
 // @desc    Create a new payroll entry
@@ -46,14 +51,28 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
 });
 
 // @route   GET /api/payroll
-// @desc    Get all payroll entries for the authenticated user
+// @desc    Get all payroll entries OR employees (supports both)
 // @access  Private (requires valid Clerk JWT)
 router.get('/', ClerkExpressRequireAuth(), async (req, res) => {
   try {
-    const clerkId = req.auth.userId;
+    const userId = req.auth.userId;
+    const { type } = req.query; // ?type=entries or ?type=employees
     
+    // If requesting employees specifically (teammate's implementation)
+    if (type === 'employees') {
+      const employees = await Employee.find({ 
+        $or: [{ clerkId: userId }, { userId: userId }]
+      }).sort({ createdAt: -1 });
+
+      return res.json({
+        success: true,
+        data: employees
+      });
+    }
+    
+    // Default: Return payroll entries (your implementation)
     const payrollEntries = await Payroll
-      .find({ clerkId })
+      .find({ clerkId: userId })
       .sort({ paymentDate: -1 }); // Sort by most recent payment date
 
     res.status(200).json({
@@ -63,10 +82,10 @@ router.get('/', ClerkExpressRequireAuth(), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching payroll entries:', error);
+    console.error('Error fetching payroll data:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch payroll entries'
+      message: 'Failed to fetch payroll data'
     });
   }
 });
@@ -104,16 +123,51 @@ router.get('/:id', ClerkExpressRequireAuth(), async (req, res) => {
 });
 
 // @route   PUT /api/payroll/:id
-// @desc    Update a payroll entry
+// @desc    Update a payroll entry OR employee (detects which model)
 // @access  Private (requires valid Clerk JWT)
 router.put('/:id', ClerkExpressRequireAuth(), async (req, res) => {
   try {
-    const clerkId = req.auth.userId;
+    const userId = req.auth.userId;
+    const { id } = req.params;
+    
+    // Check if this is an employee update (teammate's approach) or payroll update (your approach)
+    const isEmployeeUpdate = req.body.name || req.body.salary || req.body.startDate;
+    
+    if (isEmployeeUpdate) {
+      // Employee update (teammate's implementation)
+      const { name, position, salary, status, startDate } = req.body;
+      const updatedEmployee = await Employee.findOneAndUpdate(
+        { _id: id, $or: [{ clerkId: userId }, { userId: userId }] },
+        {
+          name: name?.trim(),
+          position: position?.trim(),
+          salary: salary ? parseFloat(salary) : undefined,
+          status,
+          startDate: startDate ? new Date(startDate) : undefined
+        },
+        { new: true }
+      );
+
+      if (!updatedEmployee) {
+        return res.status(404).json({
+          success: false,
+          message: 'Employee not found or unauthorized'
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: 'Employee updated successfully',
+        data: updatedEmployee
+      });
+    }
+
+    // Payroll entry update (your implementation)
     const { employeeName, employeeId, position, hoursWorked, hourlyRate, benefits, taxRate, payPeriod, paymentDate, status, notes } = req.body;
 
     const payroll = await Payroll.findOne({ 
-      _id: req.params.id, 
-      clerkId 
+      _id: id, 
+      clerkId: userId 
     });
 
     if (!payroll) {
@@ -145,43 +199,58 @@ router.put('/:id', ClerkExpressRequireAuth(), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error updating payroll entry:', error);
+    console.error('Error updating payroll/employee:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update payroll entry'
+      message: 'Failed to update'
     });
   }
 });
 
 // @route   DELETE /api/payroll/:id
-// @desc    Delete a payroll entry
+// @desc    Delete a payroll entry OR employee (detects which model)
 // @access  Private (requires valid Clerk JWT)
 router.delete('/:id', ClerkExpressRequireAuth(), async (req, res) => {
   try {
-    const clerkId = req.auth.userId;
+    const userId = req.auth.userId;
+    const { id } = req.params;
     
+    // Try deleting as payroll entry first
     const payroll = await Payroll.findOneAndDelete({ 
-      _id: req.params.id, 
-      clerkId 
+      _id: id, 
+      clerkId: userId 
     });
 
-    if (!payroll) {
-      return res.status(404).json({
-        success: false,
-        message: 'Payroll entry not found'
+    if (payroll) {
+      return res.status(200).json({
+        success: true,
+        message: 'Payroll entry deleted successfully'
       });
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Payroll entry deleted successfully'
+    // Try deleting as employee (teammate's implementation)
+    const deletedEmployee = await Employee.findOneAndDelete({ 
+      _id: id, 
+      $or: [{ clerkId: userId }, { userId: userId }]
+    });
+
+    if (deletedEmployee) {
+      return res.json({
+        success: true,
+        message: 'Employee deleted successfully'
+      });
+    }
+
+    return res.status(404).json({
+      success: false,
+      message: 'Record not found or unauthorized'
     });
 
   } catch (error) {
-    console.error('Error deleting payroll entry:', error);
+    console.error('Error deleting:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete payroll entry'
+      message: 'Failed to delete'
     });
   }
 });

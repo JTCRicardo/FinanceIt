@@ -47,6 +47,7 @@ const connectDB = async () => {
         useUnifiedTopology: true,
       });
       console.log('MongoDB connected successfully');
+
     } else {
       console.log('No MongoDB URI provided - running without database');
     }
