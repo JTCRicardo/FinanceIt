@@ -24,6 +24,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/budget-entries', require('./routes/budgetEntries'));
 app.use('/api/inventory-log', require('./routes/inventoryLogs'));
+app.use('/api/payroll', require('./routes/payroll'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -45,6 +46,7 @@ const connectDB = async () => {
         useUnifiedTopology: true,
       });
       console.log('MongoDB connected successfully');
+
     } else {
       console.log('No MongoDB URI provided - running without database');
     }

@@ -11,6 +11,7 @@ import Home from './Pages/Home';
 import './App.css';
 import InventoryLog from './Pages/InventoryLog';
 import InventoryLogDisplay from './Pages/InventoryLogDisplay';
+import PayrollManagement from './Pages/PayrollManagement';
 //so we're using react router to setup multiple homepages
 //human written file
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Route path="/budget-entries" element={<BudgetEntriesDisplay />} />
         <Route path="/inventory-log" element={<InventoryLog />} />
         <Route path="/inventory-logs" element={<InventoryLogDisplay />} />
+        <Route path="/payroll" element={<PayrollManagement />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
