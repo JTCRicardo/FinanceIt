@@ -4,62 +4,88 @@
     justify-content: flex-start;
     align-items: center;
     height: 100vh;
-    background-color: #f6f8fa;
+    background: linear-gradient(180deg, #0d1117 0%, #1b1440 35%, #3a175d 70%, #0d1117 100%);
   }
   
   .login-box {
     width: 360px;
     padding: 24px;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    background-color: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    background-color: rgba(22, 27, 34, 0.8);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   }
   
   .login-box h2 {
     text-align: center;
     margin-bottom: 20px;
     font-size: 20px;
+    color: #f0f6fc !important;
   }
   
   form input {
     width: 100%;
     padding: 10px;
     margin-bottom: 12px;
-    border: 1px solid #d0d7de;
-    border-radius: 4px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
     font-size: 14px;
     box-sizing: border-box;
+    background-color: rgba(13, 17, 23, 0.6);
+    color: #f0f6fc !important;
+    transition: all 0.2s ease;
+  }
+
+  form input:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    background-color: rgba(13, 17, 23, 0.8);
   }
   
   form button {
     width: 100%;
     padding: 10px;
-    background-color: #2ea44f;
-    color: white;
+    background-color: #10b981;
+    color: white !important;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  form button:hover {
+    background-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
   }
   
   .login-footer {
     margin-top: 16px;
     font-size: 14px;
     text-align: center;
+    color: #c9d1d9 !important;
   }
   
   .login-footer a {
-    color: #0969da;
+    color: #6366f1 !important;
     text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .login-footer a:hover {
+    color: #8b5cf6 !important;
   }
   
   .error {
-    background-color: #ffeef0;
-    color: #cf222e;
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444 !important;
     padding: 8px;
     margin-bottom: 12px;
-    border-radius: 4px;
+    border: 1px solid #ef4444;
+    border-radius: 6px;
     text-align: center;
   }
 .login-container .logo-title {

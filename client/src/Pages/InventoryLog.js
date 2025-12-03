@@ -106,8 +106,8 @@ export default function InventoryLog() {
     <div className="inventory-log-page">
       <div className="inventory-log-container">
         <div className="inventory-log-header">
-          <h1>💰 Inventory Log</h1>
-          <p>Track your income and expenses</p>
+          <h1>📦 Inventory Log</h1>
+          <p>Track and manage your inventory items</p>
         </div>
 
         {error && <div className="error-message">{error}</div>}

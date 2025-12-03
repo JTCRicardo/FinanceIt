@@ -76,7 +76,7 @@ export default function BudgetEntriesDisplay() {
             onClick={() => navigate('/budget-entry')}
             className="add-entry-btn"
           >
-            + Add New Entry
+            Add New Entry
           </button>
         </div>
 
@@ -130,7 +130,7 @@ export default function BudgetEntriesDisplay() {
             onClick={() => navigate('/dashboard')}
             className="back-btn"
           >
-            ← Back to Dashboard
+            Back to Dashboard
           </button>
         </div>
       </div>

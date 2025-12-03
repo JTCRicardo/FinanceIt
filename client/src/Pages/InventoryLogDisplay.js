@@ -15,6 +15,11 @@ export default function InventoryLogDisplay() {
   const [selectedItemId, setSelectedItemId] = useState('');
   const [quantity, setQuantity] = useState('');
   const [revenue, setRevenue] = useState(null);
+  const [savingTransaction, setSavingTransaction] = useState(false);
+  const [transactionSuccess, setTransactionSuccess] = useState(false);
+  const [showSalesHistory, setShowSalesHistory] = useState(false);
+  const [salesHistory, setSalesHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     fetchInventoryLogs();
@@ -62,11 +67,107 @@ export default function InventoryLogDisplay() {
     }).format(amount);
   };
 
-  const handleRevenueCalculation = () => {
+  const handleSoldItems = async () => {
     const item = inventoryLogs.find(log => log._id === selectedItemId);
-    if (item && quantity) {
-      const calculated = parseFloat(item.cost) * parseInt(quantity);
-      setRevenue(calculated.toFixed(2));
+    if (!item || !quantity || parseInt(quantity) <= 0) {
+      setError('Please select an item and enter a valid quantity');
+      return;
+    }
+
+    const calculated = parseFloat(item.cost) * parseInt(quantity);
+    setRevenue(calculated.toFixed(2));
+    setSavingTransaction(true);
+    setTransactionSuccess(false);
+
+    try {
+      const token = await getToken();
+      
+      console.log('Sending transaction:', {
+        itemTitle: item.title,
+        unitPrice: item.cost,
+        quantity: parseInt(quantity),
+        inventoryLogId: item._id
+      });
+      
+      const response = await fetch('http://localhost:5001/api/transactions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          itemTitle: item.title,
+          unitPrice: item.cost,
+          quantity: parseInt(quantity),
+          inventoryLogId: item._id,
+          date: new Date().toISOString()
+        })
+      });
+
+      const data = await response.json();
+      console.log('Transaction response:', data);
+
+      if (data.success) {
+        setTransactionSuccess(true);
+        setError('');
+        // Immediately update sales history if showing
+        if (showSalesHistory) {
+          await fetchSalesHistory();
+        }
+        // Reset after 3 seconds
+        setTimeout(() => {
+          setTransactionSuccess(false);
+          setSelectedItemId('');
+          setQuantity('');
+          setRevenue(null);
+        }, 3000);
+      } else {
+        setError(data.message || 'Failed to save transaction');
+        console.error('Transaction failed:', data);
+      }
+    } catch (err) {
+      console.error('Error saving transaction:', err);
+      setError('Failed to save transaction. Please try again.');
+    } finally {
+      setSavingTransaction(false);
+    }
+  };
+
+  const fetchSalesHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const token = await getToken();
+      
+      console.log('Fetching sales history...');
+      const response = await fetch('http://localhost:5001/api/transactions?type=sale', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+      console.log('Sales history response:', data);
+
+      if (data.success) {
+        setSalesHistory(data.data);
+      } else {
+        console.error('Failed to fetch sales history:', data.message);
+      }
+    } catch (err) {
+      console.error('Error fetching sales history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const toggleSalesHistory = () => {
+    if (!showSalesHistory) {
+      // Fetch history immediately when toggling to show
+      setShowSalesHistory(true);
+      fetchSalesHistory();
+    } else {
+      setShowSalesHistory(false);
     }
   };
 
@@ -90,7 +191,7 @@ export default function InventoryLogDisplay() {
             onClick={() => navigate('/inventory-log')}
             className="add-entry-btn"
           >
-            + Add New Log
+            Add New Log
           </button>
         </div>
 
@@ -141,37 +242,79 @@ export default function InventoryLogDisplay() {
           </div>
         )}
 
-        {/* ✅ Revenue Calculator Section */}
+        {/* ✅ Sold Items Section */}
         {inventoryLogs.length > 0 && (
           <div className="revenue-calculator">
-            <h3>📈 Calculate Revenue</h3>
+            <div className="section-header-with-button">
+              <h3>📈 Record Sold Items</h3>
+              <button 
+                onClick={toggleSalesHistory}
+                className="history-toggle-btn"
+              >
+                {showSalesHistory ? '✕ Hide History' : '📜 View Sales History'}
+              </button>
+            </div>
 
-            <select
-              value={selectedItemId}
-              onChange={(e) => setSelectedItemId(e.target.value)}
-            >
-              <option value="">Select an item</option>
-              {inventoryLogs.map(log => (
-                <option key={log._id} value={log._id}>
-                  {log.title} (${log.cost})
-                </option>
-              ))}
-            </select>
+            {!showSalesHistory ? (
+              <>
+                <select
+                  value={selectedItemId}
+                  onChange={(e) => setSelectedItemId(e.target.value)}
+                >
+                  <option value="">Select an item</option>
+                  {inventoryLogs.map(log => (
+                    <option key={log._id} value={log._id}>
+                      {log.title} (${log.cost})
+                    </option>
+                  ))}
+                </select>
 
-            <input
-              type="number"
-              placeholder="Enter quantity"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              min="1"
-            />
+                <input
+                  type="number"
+                  placeholder="Enter quantity sold"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  min="1"
+                />
 
-            <button onClick={handleRevenueCalculation}>
-              Calculate Revenue
-            </button>
+                <button onClick={handleSoldItems} disabled={savingTransaction}>
+                  {savingTransaction ? 'Saving...' : 'Record Sale'}
+                </button>
 
-            {revenue !== null && (
-              <p><strong>Estimated Revenue:</strong> ${revenue}</p>
+                {transactionSuccess && (
+                  <p className="success-message">
+                    <strong>✓ Sale recorded successfully!</strong> Revenue: ${revenue}
+                  </p>
+                )}
+                
+                {revenue !== null && !transactionSuccess && (
+                  <p><strong>Sale Revenue:</strong> ${revenue}</p>
+                )}
+              </>
+            ) : (
+              <div className="sales-history">
+                {loadingHistory ? (
+                  <p className="loading-history">Loading sales history...</p>
+                ) : salesHistory.length === 0 ? (
+                  <p className="no-history">No sales recorded yet.</p>
+                ) : (
+                  <div className="history-list">
+                    {salesHistory.map((sale) => (
+                      <div key={sale._id} className="history-item">
+                        <div className="history-item-header">
+                          <h4>{sale.itemTitle}</h4>
+                          <span className="history-revenue">${sale.totalRevenue.toFixed(2)}</span>
+                        </div>
+                        <div className="history-item-details">
+                          <span>Qty: {sale.quantity}</span>
+                          <span>Unit Price: ${sale.unitPrice.toFixed(2)}</span>
+                          <span className="history-date">{formatDate(sale.date)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -181,7 +324,7 @@ export default function InventoryLogDisplay() {
             onClick={() => navigate('/dashboard')}
             className="back-btn"
           >
-            ← Back to Dashboard
+            Back to Dashboard
           </button>
         </div>
       </div>
