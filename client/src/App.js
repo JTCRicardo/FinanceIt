@@ -13,6 +13,7 @@ import InventoryLog from './Pages/InventoryLog';
 import InventoryLogDisplay from './Pages/InventoryLogDisplay';
 import PayrollEntry from './Pages/PayrollEntry';
 import PayrollDisplay from './Pages/PayrollDisplay';
+import Visualizations from './Pages/Visualizations';
 //so we're using react router to setup multiple homepages
 //human written file
 function App() {
@@ -26,12 +27,14 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/budget-entry" element={<BudgetEntry />} />
         <Route path="/budget-entries" element={<BudgetEntriesDisplay />} />
+        <Route path="/visualizations" element={<Visualizations />} />
         <Route path="/inventory-log" element={<InventoryLog />} />
         <Route path="/inventory-logs" element={<InventoryLogDisplay />} />
         <Route path="/payroll-entry" element={<PayrollEntry />} />
         <Route path="/payroll" element={<PayrollDisplay />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/profile" element={<Profile />} />
+        
       </Routes>
     </Router>
   );

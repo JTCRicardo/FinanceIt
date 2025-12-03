@@ -1,32 +1,41 @@
 const express = require('express');
 const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 const Transaction = require('../models/Transaction');
+
+const InventoryLog = require('../models/InventoryLog'); 
 const router = express.Router();
 
 // @route   POST /api/transactions
-// @desc    Create a new transaction (sale)
-// @access  Private
 router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
   try {
     const { itemTitle, unitPrice, quantity, inventoryLogId, date } = req.body;
     const clerkId = req.auth.userId;
+    const qtySold = parseInt(quantity);
 
-    console.log('Creating transaction:', {
-      clerkId,
-      itemTitle,
-      unitPrice,
-      quantity,
-      inventoryLogId,
-      date
-    });
+    // 1. Find the inventory item first
+    const inventoryItem = await InventoryLog.findOne({ _id: inventoryLogId, clerkId });
 
-    const totalRevenue = parseFloat(unitPrice) * parseInt(quantity);
+    if (!inventoryItem) {
+      return res.status(404).json({ success: false, message: 'Inventory item not found' });
+    }
+
+    // 2. Check if enough stock exists
+    if (inventoryItem.amount < qtySold) {
+      return res.status(400).json({ success: false, message: 'Not enough stock available' });
+    }
+
+    // 3. Subtract stock and save inventory
+    inventoryItem.amount -= qtySold;
+    await inventoryItem.save();
+
+    // 4. Create the Transaction record
+    const totalRevenue = parseFloat(unitPrice) * qtySold;
 
     const transaction = new Transaction({
       clerkId,
       itemTitle: itemTitle.trim(),
       unitPrice: parseFloat(unitPrice),
-      quantity: parseInt(quantity),
+      quantity: qtySold,
       totalRevenue,
       transactionType: 'sale',
       date: date ? new Date(date) : new Date(),
@@ -34,12 +43,13 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
     });
 
     await transaction.save();
-    console.log('Transaction saved successfully:', transaction);
 
     res.status(201).json({
       success: true,
-      message: 'Transaction created successfully',
-      data: transaction
+      message: 'Transaction created and stock updated',
+      data: transaction,
+      // Send back new stock amount so frontend can update immediately
+      newStockAmount: inventoryItem.amount 
     });
 
   } catch (error) {
@@ -53,14 +63,10 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
 });
 
 // @route   GET /api/transactions
-// @desc    Get all transactions for the authenticated user
-// @access  Private
 router.get('/', ClerkExpressRequireAuth(), async (req, res) => {
   try {
     const clerkId = req.auth.userId;
     const { type, startDate, endDate } = req.query;
-    
-    console.log('Fetching transactions for user:', clerkId, 'with filters:', { type, startDate, endDate });
     
     const filter = { clerkId };
     if (type) filter.transactionType = type;
@@ -75,28 +81,12 @@ router.get('/', ClerkExpressRequireAuth(), async (req, res) => {
       .find(filter)
       .sort({ date: -1, createdAt: -1 });
 
-    console.log(`Found ${transactions.length} transactions`);
-
-    res.json({
-      success: true,
-      data: transactions
-    });
+    res.json({ success: true, data: transactions });
 
   } catch (error) {
     console.error('Error fetching transactions:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch transactions',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch transactions', error: error.message });
   }
-});
-
-// @route   GET /api/transactions/test
-// @desc    Test transactions route
-// @access  Public
-router.get('/test', (req, res) => {
-  res.json({ message: 'Transactions route is working!' });
 });
 
 module.exports = router;

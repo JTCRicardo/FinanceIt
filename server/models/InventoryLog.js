@@ -4,7 +4,7 @@ const inventoryLogSchema = new mongoose.Schema({
   clerkId: {
     type: String,
     required: true,
-    index: true // For faster queries by user
+    index: true 
   },
   title: {
     type: String,
@@ -20,7 +20,7 @@ const inventoryLogSchema = new mongoose.Schema({
   amount: {
     type: Number,
     required: true,
-    min: 1
+    min: 0
   },
   description: {
     type: String,

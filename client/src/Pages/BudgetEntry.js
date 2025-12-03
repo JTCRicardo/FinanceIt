@@ -10,43 +10,38 @@ export default function BudgetEntry() {
     title: '',
     cost: '',
     amount: '',
+    entryType: 'expense', 
     category: '',
     description: '',
-    date: new Date().toISOString().split('T')[0] // Today's date
+    date: new Date().toISOString().split('T')[0]
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const categories = [
-    'Transportation',
-    'Rent',
-    'Utilities',
-  ];
+  // Categories based on entry type
+  const expenseCategories = ['Transportation', 'Rent', 'Utilities', 'Other'];
+  const incomeCategories = ['Income'];
+
+  const categories = formData.entryType === 'income' ? incomeCategories : expenseCategories;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Handle cost field - only allow numbers, periods, and commas
-    if (name === 'cost') {
+    if (name === 'entryType') {
+      // Reset category when switching types
+      setFormData(prev => ({
+        ...prev,
+        entryType: value,
+        category: ''
+      }));
+    } else if (name === 'cost') {
       const filteredValue = value.replace(/[^0-9.,]/g, '');
-      setFormData(prev => ({
-        ...prev,
-        [name]: filteredValue
-      }));
-    }
-    // Handle amount field - only allow whole numbers
-    else if (name === 'amount') {
+      setFormData(prev => ({ ...prev, [name]: filteredValue }));
+    } else if (name === 'amount') {
       const filteredValue = value.replace(/[^0-9]/g, '');
-      setFormData(prev => ({
-        ...prev,
-        [name]: filteredValue
-      }));
-    }
-    else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+      setFormData(prev => ({ ...prev, [name]: filteredValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
@@ -55,7 +50,6 @@ export default function BudgetEntry() {
     setError('');
     setLoading(true);
 
-    // Basic validation
     if (!formData.title.trim()) {
       setError('Please enter a title');
       setLoading(false);
@@ -78,10 +72,8 @@ export default function BudgetEntry() {
     }
 
     try {
-      // Get JWT token from Clerk
       const token = await getToken();
       
-      // Send data to backend API
       const response = await fetch('http://localhost:5001/api/budget-entries', {
         method: 'POST',
         headers: {
@@ -99,6 +91,7 @@ export default function BudgetEntry() {
           title: '',
           cost: '',
           amount: '',
+          entryType: 'expense',
           category: '',
           description: '',
           date: new Date().toISOString().split('T')[0]
@@ -125,6 +118,27 @@ export default function BudgetEntry() {
         {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit} className="budget-entry-form">
+          {/* */}
+          <div className="form-group">
+            <label>Entry Type *</label>
+            <div className="entry-type-toggle">
+              <button
+                type="button"
+                className={`type-btn ${formData.entryType === 'expense' ? 'active expense' : ''}`}
+                onClick={() => handleChange({ target: { name: 'entryType', value: 'expense' } })}
+              >
+                💸 Expense
+              </button>
+              <button
+                type="button"
+                className={`type-btn ${formData.entryType === 'income' ? 'active income' : ''}`}
+                onClick={() => handleChange({ target: { name: 'entryType', value: 'income' } })}
+              >
+                💵 Income
+              </button>
+            </div>
+          </div>
+
           <div className="form-group">
             <label htmlFor="title">Title *</label>
             <input
@@ -133,13 +147,13 @@ export default function BudgetEntry() {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="e.g., Supplies, Lights, Rent"
+              placeholder={formData.entryType === 'income' ? 'e.g., Client Payment, Sales' : 'e.g., Supplies, Lights, Rent'}
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="cost">Cost in Dollars *</label>
+            <label htmlFor="cost">{formData.entryType === 'income' ? 'Amount in Dollars' : 'Cost in Dollars'} *</label>
             <input
               id="cost"
               type="text"
@@ -152,14 +166,14 @@ export default function BudgetEntry() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="amount">Amount *</label>
+            <label htmlFor="amount">Quantity *</label>
             <input
               id="amount"
               type="text"
               name="amount"
               value={formData.amount}
               onChange={handleChange}
-              placeholder="0"
+              placeholder="1"
               required
             />
           </div>
@@ -175,9 +189,7 @@ export default function BudgetEntry() {
             >
               <option value="">Select a category</option>
               {categories.map(category => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
+                <option key={category} value={category}>{category}</option>
               ))}
             </select>
           </div>

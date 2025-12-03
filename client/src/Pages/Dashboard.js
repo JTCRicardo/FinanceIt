@@ -50,104 +50,93 @@ export default function Dashboard() {
         const employeesData = await employeesRes.json();
         const transactionsData = await transactionsRes.json();
 
-        console.log('Dashboard data loaded:', {
-          transactions: transactionsData,
-          budget: budgetData,
-          inventory: inventoryData,
-          employees: employeesData,
-          employeeCount: employeesData.count
-        });
-
-        // Calculate statistics
+        // --- DATE SETUP ---
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
+        // Handle January edge case (prev month is Dec of prev year)
         const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
         const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-        // Calculate revenue from transactions (sold items)
+        // --- HELPER: Is this date in the target month/year? ---
+        const isMonth = (dateStr, month, year) => {
+          const d = new Date(dateStr);
+          return d.getMonth() === month && d.getFullYear() === year;
+        };
+
+        // --- 1. REVENUE CALCULATION (Inventory Sales + Budget Income) ---
         let currentRevenue = 0;
         let lastMonthRevenue = 0;
-        
+
+        // A. Add Inventory Sales (Transactions)
         if (transactionsData.success) {
-          const transactions = transactionsData.data;
-          
-          // Current month transactions
-          const currentMonthTransactions = transactions.filter(transaction => {
-            const transactionDate = new Date(transaction.date);
-            return transactionDate.getMonth() === currentMonth && 
-                   transactionDate.getFullYear() === currentYear &&
-                   transaction.transactionType === 'sale';
-          });
-
-          // Last month transactions
-          const lastMonthTransactions = transactions.filter(transaction => {
-            const transactionDate = new Date(transaction.date);
-            return transactionDate.getMonth() === lastMonth && 
-                   transactionDate.getFullYear() === lastMonthYear &&
-                   transaction.transactionType === 'sale';
-          });
-
-          currentRevenue = currentMonthTransactions.reduce((sum, transaction) => sum + transaction.totalRevenue, 0);
-          lastMonthRevenue = lastMonthTransactions.reduce((sum, transaction) => sum + transaction.totalRevenue, 0);
-          
-          console.log('Revenue calculation:', {
-            currentMonthTransactions: currentMonthTransactions.length,
-            lastMonthTransactions: lastMonthTransactions.length,
-            currentRevenue,
-            lastMonthRevenue
+          transactionsData.data.forEach(t => {
+            if (t.transactionType === 'sale') {
+              if (isMonth(t.date, currentMonth, currentYear)) {
+                currentRevenue += t.totalRevenue;
+              } else if (isMonth(t.date, lastMonth, lastMonthYear)) {
+                lastMonthRevenue += t.totalRevenue;
+              }
+            }
           });
         }
 
-        // Calculate expenses from budget entries
+        // B. Add Budget Income Entries
+        if (budgetData.success) {
+          budgetData.data.forEach(b => {
+            // Check if it's income (using entryType OR category fallback)
+            const isIncome = b.entryType === 'income' || b.category === 'Income';
+            const amount = b.cost * b.amount;
+
+            if (isIncome) {
+              if (isMonth(b.date, currentMonth, currentYear)) {
+                currentRevenue += amount;
+              } else if (isMonth(b.date, lastMonth, lastMonthYear)) {
+                lastMonthRevenue += amount;
+              }
+            }
+          });
+        }
+
+        // --- 2. EXPENSE CALCULATION (Budget Expenses) ---
         let currentExpenses = 0;
         let lastMonthExpenses = 0;
-        
+
         if (budgetData.success) {
-          const entries = budgetData.data;
-          
-          // Current month entries
-          const currentMonthEntries = entries.filter(entry => {
-            const entryDate = new Date(entry.date);
-            return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
-          });
+          budgetData.data.forEach(b => {
+            // Check if it's expense
+            const isExpense = b.entryType === 'expense' || (b.category !== 'Income' && !b.entryType);
+            const amount = b.cost * b.amount;
 
-          // Last month entries
-          const lastMonthEntries = entries.filter(entry => {
-            const entryDate = new Date(entry.date);
-            return entryDate.getMonth() === lastMonth && entryDate.getFullYear() === lastMonthYear;
+            if (isExpense) {
+              if (isMonth(b.date, currentMonth, currentYear)) {
+                currentExpenses += amount;
+              } else if (isMonth(b.date, lastMonth, lastMonthYear)) {
+                lastMonthExpenses += amount;
+              }
+            }
           });
-
-          // For expenses, consider specific categories as expenses
-          const expenseCategories = ['Transportation', 'Rent', 'Utilities', 'Other'];
-          currentExpenses = currentMonthEntries
-            .filter(entry => expenseCategories.includes(entry.category))
-            .reduce((sum, entry) => sum + (entry.cost * entry.amount), 0);
-          
-          lastMonthExpenses = lastMonthEntries
-            .filter(entry => expenseCategories.includes(entry.category))
-            .reduce((sum, entry) => sum + (entry.cost * entry.amount), 0);
         }
 
+        // --- 3. PROFIT CALCULATION ---
         const netProfit = currentRevenue - currentExpenses;
         const lastMonthProfit = lastMonthRevenue - lastMonthExpenses;
 
-        // Calculate percentage changes
-        const revenueChange = lastMonthRevenue > 0 
-          ? ((currentRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1)
-          : 0;
-        
-        const expenseChange = lastMonthExpenses > 0
-          ? ((currentExpenses - lastMonthExpenses) / lastMonthExpenses * 100).toFixed(1)
-          : 0;
-        
-        const profitChange = lastMonthProfit > 0
-          ? ((netProfit - lastMonthProfit) / lastMonthProfit * 100).toFixed(1)
-          : 0;
+        // --- 4. PERCENTAGE CHANGE LOGIC ---
+        // Helper to safely calculate % change even if previous month was 0
+        const calculateChange = (current, previous) => {
+          if (previous === 0) {
+            return current > 0 ? 100 : 0;
+          }
+          return ((current - previous) / previous * 100).toFixed(1);
+        };
 
-        const growthRate = lastMonthRevenue > 0
-          ? ((currentRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1)
-          : 0;
+        const revenueChange = calculateChange(currentRevenue, lastMonthRevenue);
+        const expenseChange = calculateChange(currentExpenses, lastMonthExpenses);
+        const profitChange = calculateChange(netProfit, lastMonthProfit);
+
+        // Growth Rate usually refers to Revenue Growth
+        const growthRate = revenueChange;
 
         setStats({
           totalRevenue: currentRevenue,
@@ -159,7 +148,7 @@ export default function Dashboard() {
           profitChange: profitChange,
           budgetEntryCount: budgetData.success ? budgetData.data.length : 0,
           inventoryItemCount: inventoryData.success ? inventoryData.data.length : 0,
-          employeeCount: employeesData.success ? employeesData.count : 0
+          employeeCount: employeesData.success ? employeesData.count : 0 
         });
 
         setLoading(false);
@@ -181,14 +170,12 @@ export default function Dashboard() {
     setShowDropdown(!showDropdown);
   };
 
-  // User display information (teammate's approach)
   const userName = user?.username || user?.firstName || 'there';
   const userInitial = user?.username?.charAt(0).toUpperCase() || 
                       user?.firstName?.charAt(0).toUpperCase() || 
                       user?.emailAddresses?.[0]?.emailAddress?.charAt(0).toUpperCase() || 'U';
   const displayName = user?.username || user?.emailAddresses?.[0]?.emailAddress || 'User';
 
-  // Feature cards with real stats (merged both approaches)
   const features = [
     {
       id: 'budget',
@@ -218,7 +205,7 @@ export default function Dashboard() {
       route: '/payroll',
       className: 'payroll',
       statLabel: 'Employees',
-      statValue: stats.employeeCount
+      statValue: Array.isArray(stats.employeeCount) ? stats.employeeCount.length : stats.employeeCount
     },
     {
       id: 'visualizations',
@@ -227,14 +214,35 @@ export default function Dashboard() {
       description: 'Create charts and graphs to visualize your budget and financial data.',
       route: '/visualizations',
       className: 'visualizations',
-      statLabel: 'Reports',
-      statValue: '12'
+      statLabel: 'Insights',
+      statValue: 'View'
     }
   ];
 
+  // Helper to determine arrow direction and color
+  const renderChange = (value, inverse = false) => {
+    const num = parseFloat(value);
+    const isPositive = num >= 0;
+    
+    // Determine arrow symbol
+    const arrow = isPositive ? '↑' : '↓';
+    
+    // Determine color class
+    let colorClass = isPositive ? 'stat-positive' : 'stat-negative';
+    if (inverse) {
+      colorClass = isPositive ? 'stat-negative' : 'stat-positive';
+    }
+
+    return (
+      <span className={`stat-change ${colorClass}`}>
+        {arrow} {Math.abs(num)}% from last month
+      </span>
+    );
+  };
+
   return (
     <div className="dashboard-page">
-      {/* Navigation Bar - Teammate's cleaner layout */}
+      {/* Navigation Bar */}
       <nav className="dashboard-navbar">
         <div className="dashboard-brand" onClick={() => navigate('/dashboard')}>
           <img src="/Photos/FinanceITlogo.png" alt="FinanceIT Logo" />
@@ -254,22 +262,10 @@ export default function Dashboard() {
                 <div className="dropdown-username">{user?.username || 'User'}</div>
                 <div className="dropdown-email">{user?.emailAddresses?.[0]?.emailAddress}</div>
               </div>
-              <button
-                className="dropdown-item"
-                onClick={() => {
-                  setShowDropdown(false);
-                  navigate('/settings');
-                }}
-              >
+              <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/settings'); }}>
                 ⚙️ Settings
               </button>
-              <button
-                className="dropdown-item"
-                onClick={() => {
-                  setShowDropdown(false);
-                  navigate('/profile');
-                }}
-              >
+              <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/profile'); }}>
                 👤 Profile
               </button>
               <div className="dropdown-divider" />
@@ -281,25 +277,21 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      {/* Main Content - Original layout restored */}
+      {/* Main Content */}
       <main className="dashboard-main">
         <div className="dashboard-container">
           {/* Welcome Section */}
           <div className="welcome-section">
             <div>
-              <h1 className="welcome-title">
-                Welcome back, {userName}! 👋
-              </h1>
-              <p className="welcome-subtitle">
-                Here's what's happening with your finances today
-              </p>
+              <h1 className="welcome-title">Welcome back, {userName}! 👋</h1>
+              <p className="welcome-subtitle">Here's what's happening with your finances today</p>
             </div>
             <button className="btn-primary" onClick={() => navigate('/budget-entry')}>
               <span>➕</span> Quick Entry
             </button>
           </div>
 
-          {/* Stats Overview - Large cards with icons */}
+          {/* Stats Overview */}
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
@@ -310,11 +302,10 @@ export default function Dashboard() {
                 <h3 className="stat-value">
                   {loading ? '...' : `$${stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
-                <span className={`stat-change ${stats.revenueChange >= 0 ? 'stat-positive' : 'stat-negative'}`}>
-                  {stats.revenueChange >= 0 ? '↑' : '↓'} {Math.abs(stats.revenueChange)}% from last month
-                </span>
+                {renderChange(stats.revenueChange)}
               </div>
             </div>
+
             <div className="stat-card">
               <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
                 💸
@@ -324,11 +315,11 @@ export default function Dashboard() {
                 <h3 className="stat-value">
                   {loading ? '...' : `$${stats.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
-                <span className={`stat-change ${stats.expenseChange >= 0 ? 'stat-negative' : 'stat-positive'}`}>
-                  {stats.expenseChange >= 0 ? '↑' : '↓'} {Math.abs(stats.expenseChange)}% from last month
-                </span>
+                {/* Inverse: Expense going UP is red */}
+                {renderChange(stats.expenseChange, true)}
               </div>
             </div>
+
             <div className="stat-card">
               <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}>
                 💰
@@ -338,11 +329,10 @@ export default function Dashboard() {
                 <h3 className="stat-value">
                   {loading ? '...' : `$${stats.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
-                <span className={`stat-change ${stats.profitChange >= 0 ? 'stat-positive' : 'stat-negative'}`}>
-                  {stats.profitChange >= 0 ? '↑' : '↓'} {Math.abs(stats.profitChange)}% from last month
-                </span>
+                {renderChange(stats.profitChange)}
               </div>
             </div>
+
             <div className="stat-card">
               <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
                 📈
@@ -352,14 +342,14 @@ export default function Dashboard() {
                 <h3 className="stat-value">
                   {loading ? '...' : `${stats.growthRate}%`}
                 </h3>
-                <span className={`stat-change ${stats.growthRate >= 0 ? 'stat-positive' : 'stat-negative'}`}>
-                  {stats.growthRate >= 0 ? '↑' : '↓'} Revenue growth rate
+                <span className={`stat-change ${parseFloat(stats.growthRate) >= 0 ? 'stat-positive' : 'stat-negative'}`}>
+                  {parseFloat(stats.growthRate) >= 0 ? '↑' : '↓'} Revenue growth
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Feature Cards - Quick Access */}
+          {/* Feature Cards */}
           <div className="section-header">
             <h2 className="section-title">Quick Access</h2>
             <p className="section-subtitle">Navigate to your most-used features</p>

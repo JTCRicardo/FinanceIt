@@ -4,7 +4,7 @@ const budgetEntrySchema = new mongoose.Schema({
   clerkId: {
     type: String,
     required: true,
-    index: true // For faster queries by user
+    index: true 
   },
   title: {
     type: String,
@@ -22,10 +22,16 @@ const budgetEntrySchema = new mongoose.Schema({
     required: true,
     min: 1
   },
+
+  entryType: {
+    type: String,
+    enum: ['income', 'expense'],
+    default: 'expense'
+  },
   category: {
     type: String,
     required: true,
-    enum: ['Transportation', 'Rent', 'Utilities', 'Other']
+    enum: ['Transportation', 'Rent', 'Utilities', 'Other', 'Income']
   },
   description: {
     type: String,
@@ -37,10 +43,9 @@ const budgetEntrySchema = new mongoose.Schema({
     required: true
   }
 }, {
-  timestamps: true // Automatically adds createdAt and updatedAt
+  timestamps: true 
 });
 
-// Index for efficient queries by user and date
 budgetEntrySchema.index({ clerkId: 1, date: -1 });
 
 module.exports = mongoose.model('BudgetEntry', budgetEntrySchema);
