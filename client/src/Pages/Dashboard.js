@@ -281,70 +281,126 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      {/* Main Content - Your real stats with teammate's layout */}
-      <div className="dashboard-content">
-        <div className="dashboard-header">
-          <h1 className="dashboard-greeting">Welcome back, {userName}!</h1>
-          <p className="dashboard-subtext">What would you like to manage today?</p>
-        </div>
+      {/* Main Content - Original layout restored */}
+      <main className="dashboard-main">
+        <div className="dashboard-container">
+          {/* Welcome Section */}
+          <div className="welcome-section">
+            <div>
+              <h1 className="welcome-title">
+                Welcome back, {userName}! 👋
+              </h1>
+              <p className="welcome-subtitle">
+                Here's what's happening with your finances today
+              </p>
+            </div>
+            <button className="btn-primary" onClick={() => navigate('/budget-entry')}>
+              <span>➕</span> Quick Entry
+            </button>
+          </div>
 
-        {/* Feature Cards */}
-        <div className="feature-cards-grid">
-          {features.map((feature) => (
-            <div
-              key={feature.id}
-              className={`feature-card ${feature.className}`}
-              onClick={() => navigate(feature.route)}
-            >
-              <span className="feature-card-icon">{feature.icon}</span>
-              <h3 className="feature-card-title">{feature.title}</h3>
-              <p className="feature-card-description">{feature.description}</p>
-              <span className="feature-card-arrow">→</span>
+          {/* Stats Overview - Large cards with icons */}
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+                💵
+              </div>
+              <div className="stat-content">
+                <p className="stat-label">Total Revenue</p>
+                <h3 className="stat-value">
+                  {loading ? '...' : `$${stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                </h3>
+                <span className={`stat-change ${stats.revenueChange >= 0 ? 'stat-positive' : 'stat-negative'}`}>
+                  {stats.revenueChange >= 0 ? '↑' : '↓'} {Math.abs(stats.revenueChange)}% from last month
+                </span>
+              </div>
             </div>
-          ))}
-        </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
+                💸
+              </div>
+              <div className="stat-content">
+                <p className="stat-label">Total Expenses</p>
+                <h3 className="stat-value">
+                  {loading ? '...' : `$${stats.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                </h3>
+                <span className={`stat-change ${stats.expenseChange >= 0 ? 'stat-negative' : 'stat-positive'}`}>
+                  {stats.expenseChange >= 0 ? '↑' : '↓'} {Math.abs(stats.expenseChange)}% from last month
+                </span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}>
+                💰
+              </div>
+              <div className="stat-content">
+                <p className="stat-label">Net Profit</p>
+                <h3 className="stat-value">
+                  {loading ? '...' : `$${stats.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                </h3>
+                <span className={`stat-change ${stats.profitChange >= 0 ? 'stat-positive' : 'stat-negative'}`}>
+                  {stats.profitChange >= 0 ? '↑' : '↓'} {Math.abs(stats.profitChange)}% from last month
+                </span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
+                📈
+              </div>
+              <div className="stat-content">
+                <p className="stat-label">Growth Rate</p>
+                <h3 className="stat-value">
+                  {loading ? '...' : `${stats.growthRate}%`}
+                </h3>
+                <span className={`stat-change ${stats.growthRate >= 0 ? 'stat-positive' : 'stat-negative'}`}>
+                  {stats.growthRate >= 0 ? '↑' : '↓'} Revenue growth rate
+                </span>
+              </div>
+            </div>
+          </div>
 
-        {/* Stats Section - Your real data! */}
-        <div className="stats-section">
-          <div className="stat-card">
-            <div className="stat-value">
-              {loading ? '...' : `$${stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-            </div>
-            <div className="stat-label">Total Revenue</div>
-            {!loading && stats.revenueChange !== 0 && (
-              <div className="stat-change" style={{ color: stats.revenueChange >= 0 ? '#10b981' : '#ef4444', fontSize: '12px', marginTop: '4px' }}>
-                {stats.revenueChange >= 0 ? '↑' : '↓'} {Math.abs(stats.revenueChange)}%
-              </div>
-            )}
+          {/* Feature Cards - Quick Access */}
+          <div className="section-header">
+            <h2 className="section-title">Quick Access</h2>
+            <p className="section-subtitle">Navigate to your most-used features</p>
           </div>
-          <div className="stat-card">
-            <div className="stat-value">
-              {loading ? '...' : `$${stats.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-            </div>
-            <div className="stat-label">Total Expenses</div>
-            {!loading && stats.expenseChange !== 0 && (
-              <div className="stat-change" style={{ color: stats.expenseChange >= 0 ? '#ef4444' : '#10b981', fontSize: '12px', marginTop: '4px' }}>
-                {stats.expenseChange >= 0 ? '↑' : '↓'} {Math.abs(stats.expenseChange)}%
+
+          <div className="feature-grid">
+            {features.map((feature) => (
+              <div
+                key={feature.id}
+                className="feature-card"
+                onClick={() => navigate(feature.route)}
+                onMouseEnter={() => setHoveredCard(feature.id)}
+                onMouseLeave={() => setHoveredCard(null)}
+                style={{ '--card-color': feature.id === 'budget' ? '#10b981' : feature.id === 'inventory' ? '#f59e0b' : feature.id === 'payroll' ? '#6366f1' : '#ec4899' }}
+              >
+                <div className="feature-card-header">
+                  <div className="feature-icon" style={{ 
+                    background: `linear-gradient(135deg, ${feature.id === 'budget' ? '#10b981' : feature.id === 'inventory' ? '#f59e0b' : feature.id === 'payroll' ? '#6366f1' : '#ec4899'}, ${feature.id === 'budget' ? '#059669' : feature.id === 'inventory' ? '#d97706' : feature.id === 'payroll' ? '#4f46e5' : '#db2777'})` 
+                  }}>
+                    <span>{feature.icon}</span>
+                  </div>
+                  <div className="feature-badge" style={{ 
+                    background: `${feature.id === 'budget' ? '#10b981' : feature.id === 'inventory' ? '#f59e0b' : feature.id === 'payroll' ? '#6366f1' : '#ec4899'}22`, 
+                    color: feature.id === 'budget' ? '#10b981' : feature.id === 'inventory' ? '#f59e0b' : feature.id === 'payroll' ? '#6366f1' : '#ec4899' 
+                  }}>
+                    {feature.statValue}
+                  </div>
+                </div>
+                
+                <h3 className="feature-title">{feature.title}</h3>
+                <p className="feature-description">{feature.description}</p>
+                
+                <div className="feature-footer">
+                  <span className="feature-stat-label">{feature.statLabel}</span>
+                  <span className="feature-arrow">→</span>
+                </div>
               </div>
-            )}
-          </div>
-          <div className="stat-card">
-            <div className="stat-value">
-              {loading ? '...' : `$${stats.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-            </div>
-            <div className="stat-label">Net Profit</div>
-            {!loading && stats.profitChange !== 0 && (
-              <div className="stat-change" style={{ color: stats.profitChange >= 0 ? '#10b981' : '#ef4444', fontSize: '12px', marginTop: '4px' }}>
-                {stats.profitChange >= 0 ? '↑' : '↓'} {Math.abs(stats.profitChange)}%
-              </div>
-            )}
-          </div>
-          <div className="stat-card">
-            <div className="stat-value">{loading ? '...' : stats.employeeCount}</div>
-            <div className="stat-label">Employees</div>
+            ))}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
