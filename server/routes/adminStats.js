@@ -3,6 +3,7 @@ const router = express.Router();
 const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 const User = require('../models/User');
 const BudgetEntry = require('../models/BudgetEntry');
+const Payroll = require('../models/Payroll');
 
 // @route   GET /api/admin/stats
 // @desc    Get site-wide statistics for admin users
@@ -20,15 +21,23 @@ router.get('/stats', ClerkExpressRequireAuth(), async (req, res) => {
     // Get all budget entries from all users
     const allEntries = await BudgetEntry.find({});
 
+    // Get all payroll entries from all users
+    const allPayroll = await Payroll.find({});
+
     // Calculate total revenue (income entries)
     const totalRevenue = allEntries
       .filter(entry => entry.entryType === 'income')
       .reduce((sum, entry) => sum + (entry.cost * entry.amount), 0);
 
-    // Calculate total expenses (expense entries)
-    const totalExpenses = allEntries
+    // Calculate total expenses (expense entries + payroll)
+    const budgetExpenses = allEntries
       .filter(entry => entry.entryType === 'expense')
       .reduce((sum, entry) => sum + (entry.cost * entry.amount), 0);
+    
+    const payrollExpenses = allPayroll
+      .reduce((sum, payroll) => sum + (payroll.netPay || 0), 0);
+    
+    const totalExpenses = budgetExpenses + payrollExpenses;
 
     // Calculate net profit
     const netProfit = totalRevenue - totalExpenses;

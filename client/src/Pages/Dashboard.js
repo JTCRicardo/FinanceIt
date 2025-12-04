@@ -64,7 +64,7 @@ export default function Dashboard() {
         }
 
         // For non-admin users, fetch personal data
-        const [budgetRes, inventoryRes, employeesRes, transactionsRes] = await Promise.all([
+        const [budgetRes, inventoryRes, employeesRes, transactionsRes, payrollRes] = await Promise.all([
           fetch('http://localhost:5001/api/budget-entries', {
             headers: { Authorization: `Bearer ${token}` }
           }),
@@ -76,6 +76,9 @@ export default function Dashboard() {
           }),
           fetch('http://localhost:5001/api/transactions', {
             headers: { Authorization: `Bearer ${token}` }
+          }),
+          fetch('http://localhost:5001/api/payroll', {
+            headers: { Authorization: `Bearer ${token}` }
           })
         ]);
 
@@ -83,6 +86,7 @@ export default function Dashboard() {
         const inventoryData = await inventoryRes.json();
         const employeesData = await employeesRes.json();
         const transactionsData = await transactionsRes.json();
+        const payrollData = await payrollRes.json();
 
         // --- DATE SETUP ---
         const now = new Date();
@@ -132,10 +136,11 @@ export default function Dashboard() {
           });
         }
 
-        // --- 2. EXPENSE CALCULATION (Budget Expenses) ---
+        // --- 2. EXPENSE CALCULATION (Budget Expenses + Payroll) ---
         let currentExpenses = 0;
         let lastMonthExpenses = 0;
 
+        // A. Budget Expenses
         if (budgetData.success) {
           budgetData.data.forEach(b => {
             // Check if it's expense
@@ -148,6 +153,18 @@ export default function Dashboard() {
               } else if (isMonth(b.date, lastMonth, lastMonthYear)) {
                 lastMonthExpenses += amount;
               }
+            }
+          });
+        }
+
+        // B. Add Payroll Expenses
+        if (payrollData.success) {
+          payrollData.data.forEach(p => {
+            const payAmount = p.netPay || 0;
+            if (isMonth(p.paymentDate, currentMonth, currentYear)) {
+              currentExpenses += payAmount;
+            } else if (isMonth(p.paymentDate, lastMonth, lastMonthYear)) {
+              lastMonthExpenses += payAmount;
             }
           });
         }

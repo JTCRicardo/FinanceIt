@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
+const { ClerkExpressRequireAuth, clerkClient } = require('@clerk/clerk-sdk-node');
 
 // @route   GET /api/users/profile
 // @desc    Get user profile
@@ -68,14 +68,31 @@ router.put('/set-admin', ClerkExpressRequireAuth(), async (req, res) => {
       return res.status(403).json({ message: 'Invalid admin code' });
     }
     
-    const user = await User.findOneAndUpdate(
-      { clerkId },
-      { isAdmin: true },
-      { new: true }
-    );
+    // Find or create user, then set admin status
+    let user = await User.findOne({ clerkId });
     
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      // Get user info from Clerk to create new user
+      const clerkUser = await clerkClient.users.getUser(clerkId);
+      const email = clerkUser.emailAddresses?.[0]?.emailAddress;
+      const username = clerkUser.username || clerkUser.firstName || email?.split('@')[0];
+      
+      if (!email) {
+        return res.status(400).json({ message: 'No email found for user' });
+      }
+      
+      // Create new user if doesn't exist
+      user = new User({
+        clerkId,
+        email,
+        username,
+        isAdmin: true
+      });
+      await user.save();
+    } else {
+      // Update existing user
+      user.isAdmin = true;
+      await user.save();
     }
     
     res.json({ message: 'Admin status granted', isAdmin: user.isAdmin });
