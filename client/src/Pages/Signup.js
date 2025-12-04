@@ -1,16 +1,22 @@
-import { useSignUp } from '@clerk/clerk-react';
-import { useState } from 'react';
+import { useSignUp, useClerk } from '@clerk/clerk-react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './Signup.css';
 
 export default function Signup() {
     const {signUp, setActive } = useSignUp();
+    const { signOut } = useClerk();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    // Sign out any existing user when component mounts
+    useEffect(() => {
+        signOut();
+    }, [signOut]);
   
     const handleSubmit = async (e) => {
       e.preventDefault();
@@ -119,7 +125,7 @@ export default function Signup() {
           </form>
           
           <div className="signup-footer">
-            <p>Already have an account? <Link to="/">Sign in</Link></p>
+            <p>Already have an account? <Link to="/login">Sign in</Link></p>
           </div>
         </div>
       </div>
