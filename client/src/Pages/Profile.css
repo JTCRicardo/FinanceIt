@@ -252,7 +252,7 @@
 .profile-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 24px;
   padding-bottom: 24px;
   border-bottom: 1px solid #f6f8fa;
@@ -261,11 +261,12 @@
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 10px;
+  padding: 10px;
   background-color: #f6f8fa;
   border-radius: 8px;
   transition: all 0.2s;
+  min-width: 0;
 }
 
 .stat-item:hover {
@@ -274,18 +275,33 @@
 }
 
 .stat-icon {
-  font-size: 24px;
+  font-size: 20px;
+  flex-shrink: 0;
 }
 
 .stat-info {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .stat-value {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #24292f;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #656d76;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stat-label {
@@ -556,6 +572,75 @@
 .secondary-button:hover {
   background-color: #f3f4f6;
   border-color: #c1c8cd;
+}
+
+/* Admin Status Card */
+.admin-message {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #f6f8fa;
+  border: 1px solid #d0d7de;
+}
+
+.admin-status-display {
+  padding: 16px;
+  background-color: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 15px;
+  color: #24292f;
+}
+
+.admin-status-display strong {
+  color: #181a1b;
+  margin-right: 8px;
+}
+
+.admin-code-section {
+  display: flex;
+  gap: 12px;
+}
+
+.admin-code-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #24292f;
+  transition: all 0.2s;
+}
+
+.admin-code-input:focus {
+  outline: none;
+  border-color: #0969da;
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+}
+
+.set-admin-btn {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #0969da;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.set-admin-btn:hover {
+  background-color: #0860ca;
+}
+
+.set-admin-btn:active {
+  background-color: #0757ba;
 }
 
 /* Responsive Design */

@@ -21,6 +21,9 @@ export default function Profile() {
     bio: '',
     company: ''
   });
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCode, setAdminCode] = useState('');
+  const [adminMessage, setAdminMessage] = useState('');
 
   // Load user profile data from backend on mount
   useEffect(() => {
@@ -52,6 +55,7 @@ export default function Profile() {
             bio: data.bio || '',
             company: data.company || ''
           }));
+          setIsAdmin(data.isAdmin || false);
         }
       } catch (err) {
         console.error('Failed to load profile:', err);
@@ -70,6 +74,34 @@ export default function Profile() {
 
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
+  };
+
+  const handleSetAdmin = async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/users/set-admin', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ adminCode })
+      });
+
+      if (response.ok) {
+        setIsAdmin(true);
+        setAdminCode('');
+        setAdminMessage('✅ Admin status granted!');
+        setTimeout(() => setAdminMessage(''), 3000);
+      } else {
+        const data = await response.json();
+        setAdminMessage('❌ ' + (data.message || 'Invalid admin code'));
+        setTimeout(() => setAdminMessage(''), 3000);
+      }
+    } catch (err) {
+      setAdminMessage('❌ Error: ' + err.message);
+      setTimeout(() => setAdminMessage(''), 3000);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -356,6 +388,31 @@ export default function Profile() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Admin Status */}
+            <div className="details-card">
+              <div className="card-header">
+                <h2>Admin Status</h2>
+              </div>
+              <div className="card-body">
+                {adminMessage && <div className="admin-message">{adminMessage}</div>}
+                <div className="admin-status-display">
+                  <strong>Current Status:</strong> {isAdmin ? '✅ Admin' : '❌ Not Admin'}
+                </div>
+                <div className="admin-code-section">
+                  <input
+                    type="text"
+                    value={adminCode}
+                    onChange={(e) => setAdminCode(e.target.value)}
+                    placeholder="Enter admin code"
+                    className="admin-code-input"
+                  />
+                  <button onClick={handleSetAdmin} className="set-admin-btn">
+                    Set Admin
+                  </button>
                 </div>
               </div>
             </div>

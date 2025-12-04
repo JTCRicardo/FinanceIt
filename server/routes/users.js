@@ -18,7 +18,8 @@ router.get('/profile', ClerkExpressRequireAuth(), async (req, res) => {
       email: user.email,
       phone: user.phone || '',
       bio: user.bio || '',
-      company: user.company || ''
+      company: user.company || '',
+      isAdmin: user.isAdmin || false
     });
   } catch (err) {
     res.status(500).json({ message: 'Error fetching profile', error: err.message });
@@ -51,6 +52,36 @@ router.put('/profile', ClerkExpressRequireAuth(), async (req, res) => {
   } catch (err) {
     console.error('Error in PUT /api/users/profile:', err);
     res.status(500).json({ message: 'Error updating profile', error: err.message });
+  }
+});
+
+// @route   PUT /api/users/set-admin
+// @desc    Set user admin status
+// @access  Private
+router.put('/set-admin', ClerkExpressRequireAuth(), async (req, res) => {
+  try {
+    const { adminCode } = req.body;
+    const clerkId = req.auth.userId;
+    
+    // Validate admin code on server side (secure)
+    if (adminCode !== process.env.ADMIN_SECRET_CODE) {
+      return res.status(403).json({ message: 'Invalid admin code' });
+    }
+    
+    const user = await User.findOneAndUpdate(
+      { clerkId },
+      { isAdmin: true },
+      { new: true }
+    );
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({ message: 'Admin status granted', isAdmin: user.isAdmin });
+  } catch (err) {
+    console.error('Error in PUT /api/users/set-admin:', err);
+    res.status(500).json({ message: 'Error updating admin status', error: err.message });
   }
 });
 

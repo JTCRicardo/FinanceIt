@@ -9,6 +9,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalExpenses: 0,
@@ -29,7 +30,40 @@ export default function Dashboard() {
         const token = await session?.getToken();
         if (!token) return;
 
-        // Fetch all data in parallel
+        // Check if user is admin
+        const profileRes = await fetch('/api/users/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const profileData = await profileRes.json();
+        const userIsAdmin = profileData.isAdmin || false;
+        setIsAdmin(userIsAdmin);
+
+        // If admin, fetch site-wide stats
+        if (userIsAdmin) {
+          const adminRes = await fetch('/api/admin/stats', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const adminData = await adminRes.json();
+          
+          if (adminData.success) {
+            setStats({
+              totalRevenue: adminData.data.totalRevenue,
+              totalExpenses: adminData.data.totalExpenses,
+              netProfit: adminData.data.netProfit,
+              growthRate: adminData.data.growthRate,
+              revenueChange: 0,
+              expenseChange: 0,
+              profitChange: 0,
+              budgetEntryCount: adminData.data.totalEntries,
+              inventoryItemCount: 0,
+              employeeCount: adminData.data.totalUsers
+            });
+          }
+          setLoading(false);
+          return;
+        }
+
+        // For non-admin users, fetch personal data
         const [budgetRes, inventoryRes, employeesRes, transactionsRes] = await Promise.all([
           fetch('http://localhost:5001/api/budget-entries', {
             headers: { Authorization: `Bearer ${token}` }
@@ -281,11 +315,15 @@ export default function Dashboard() {
           <div className="welcome-section">
             <div>
               <h1 className="welcome-title">Welcome back, {userName}! 👋</h1>
-              <p className="welcome-subtitle">Here's what's happening with your finances today</p>
+              <p className="welcome-subtitle">
+                {isAdmin ? "Site-wide statistics across all users" : "Here's what's happening with your finances today"}
+              </p>
             </div>
-            <button className="btn-primary" onClick={() => navigate('/budget-entry')}>
-              <span>➕</span> Quick Entry
-            </button>
+            {!isAdmin && (
+              <button className="btn-primary" onClick={() => navigate('/budget-entry')}>
+                <span>➕</span> Quick Entry
+              </button>
+            )}
           </div>
 
           {/* Stats Overview */}
@@ -295,11 +333,11 @@ export default function Dashboard() {
                 💵
               </div>
               <div className="stat-content">
-                <p className="stat-label">Total Revenue</p>
+                <p className="stat-label">{isAdmin ? 'Site-wide Revenue' : 'Total Revenue'}</p>
                 <h3 className="stat-value">
                   {loading ? '...' : `$${stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
-                {renderChange(stats.revenueChange)}
+                {!isAdmin && renderChange(stats.revenueChange)}
               </div>
             </div>
 
@@ -308,12 +346,11 @@ export default function Dashboard() {
                 💸
               </div>
               <div className="stat-content">
-                <p className="stat-label">Total Expenses</p>
+                <p className="stat-label">{isAdmin ? 'Site-wide Expenses' : 'Total Expenses'}</p>
                 <h3 className="stat-value">
                   {loading ? '...' : `$${stats.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
-                {/* Inverse: Expense going UP is red */}
-                {renderChange(stats.expenseChange, true)}
+                {!isAdmin && renderChange(stats.expenseChange, true)}
               </div>
             </div>
 
@@ -322,11 +359,11 @@ export default function Dashboard() {
                 💰
               </div>
               <div className="stat-content">
-                <p className="stat-label">Net Profit</p>
+                <p className="stat-label">{isAdmin ? 'Site-wide Net Profit' : 'Net Profit'}</p>
                 <h3 className="stat-value">
                   {loading ? '...' : `$${stats.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </h3>
-                {renderChange(stats.profitChange)}
+                {!isAdmin && renderChange(stats.profitChange)}
               </div>
             </div>
 
@@ -340,19 +377,21 @@ export default function Dashboard() {
                   {loading ? '...' : `${stats.growthRate}%`}
                 </h3>
                 <span className={`stat-change ${parseFloat(stats.growthRate) >= 0 ? 'stat-positive' : 'stat-negative'}`}>
-                  {parseFloat(stats.growthRate) >= 0 ? '↑' : '↓'} Revenue growth
+                  {parseFloat(stats.growthRate) >= 0 ? '↑' : '↓'} {isAdmin ? 'Last 30 days' : 'Revenue growth'}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Feature Cards */}
-          <div className="section-header">
-            <h2 className="section-title">Quick Access</h2>
-            <p className="section-subtitle">Navigate to your most-used features</p>
-          </div>
+          {/* Feature Cards - Only show for non-admin users */}
+          {!isAdmin && (
+            <>
+              <div className="section-header">
+                <h2 className="section-title">Quick Access</h2>
+                <p className="section-subtitle">Navigate to your most-used features</p>
+              </div>
 
-          <div className="feature-grid">
+              <div className="feature-grid">
             {features.map((feature) => (
               <div
                 key={feature.id}
@@ -386,6 +425,8 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+            </>
+          )}
         </div>
       </main>
     </div>
