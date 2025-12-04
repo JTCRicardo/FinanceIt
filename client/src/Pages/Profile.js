@@ -1,28 +1,67 @@
-import React, { useState } from 'react';
-import { useClerk, useUser } from '@clerk/clerk-react';
+import React, { useState, useEffect } from 'react';
+import { useClerk, useUser, useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 
 export default function Profile() {
   const { signOut } = useClerk();
   const { user } = useUser();
+  const { getToken } = useAuth();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   
   // Profile state
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    username: user?.username || '',
-    email: user?.emailAddresses?.[0]?.emailAddress || '',
-    phone: user?.phoneNumbers?.[0]?.phoneNumber || '',
-    bio: 'Financial enthusiast focused on building better money habits.',
-    company: '',
-    location: '',
-    website: ''
+    username: user?.username || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || '',
+    email: user?.emailAddresses?.[0]?.emailAddress || user?.primaryEmailAddress?.emailAddress || '',
+    phone: '',
+    bio: '',
+    company: ''
   });
+
+  // Load user profile data from backend on mount
+  useEffect(() => {
+    // Update form data with Clerk user info
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        username: user?.username || user?.firstName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || '',
+        email: user?.emailAddresses?.[0]?.emailAddress || user?.primaryEmailAddress?.emailAddress || ''
+      }));
+    }
+  }, [user]);
+
+  // Load profile data from backend
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetch('/api/users/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({
+            ...prev,
+            phone: data.phone || '',
+            bio: data.bio || '',
+            company: data.company || ''
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+      }
+    };
+    
+    if (user) {
+      loadUserProfile();
+    }
+  }, [user, getToken]);
 
   const handleSignOut = () => {
     signOut();
@@ -41,27 +80,63 @@ export default function Profile() {
     }));
   };
 
-  const handleSaveProfile = () => {
-    // Here you would typically save to backend/Clerk
-    setIsEditing(false);
-    setSaveMessage('Profile updated successfully!');
-    setTimeout(() => setSaveMessage(''), 3000);
+  const handleSaveProfile = async () => {
+    setLoading(true);
+    try {
+      // Check if user is loaded
+      if (!user) {
+        setSaveMessage('❌ Error: User not loaded. Please refresh the page.');
+        setTimeout(() => setSaveMessage(''), 5000);
+        setLoading(false);
+        return;
+      }
+
+      // Get token
+      const token = await getToken();
+      if (!token) {
+        setSaveMessage('❌ Error: Failed to get authentication token.');
+        setTimeout(() => setSaveMessage(''), 5000);
+        setLoading(false);
+        return;
+      }
+
+      // Make request
+      const response = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          username: formData.username,
+          phone: formData.phone,
+          bio: formData.bio,
+          company: formData.company
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsEditing(false);
+        setSaveMessage('✅ Profile updated successfully!');
+        setTimeout(() => setSaveMessage(''), 3000);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setSaveMessage(`❌ Failed to save: ${errorData.message || 'Server error (status ' + response.status + ')'}`);
+        setTimeout(() => setSaveMessage(''), 5000);
+      }
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      setSaveMessage(`❌ Network error: ${err.message || 'Unable to reach server'}`);
+      setTimeout(() => setSaveMessage(''), 5000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Reset form data
-    setFormData({
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      username: user?.username || '',
-      email: user?.emailAddresses?.[0]?.emailAddress || '',
-      phone: user?.phoneNumbers?.[0]?.phoneNumber || '',
-      bio: 'Financial enthusiast focused on building better money habits.',
-      company: '',
-      location: '',
-      website: ''
-    });
   };
 
   // Mock statistics - in real app, fetch from backend
@@ -102,9 +177,6 @@ export default function Profile() {
                 <div className="dropdown-username">{user?.username || 'User'}</div>
                 <div className="dropdown-email">{user?.emailAddresses?.[0]?.emailAddress}</div>
               </div>
-              <button onClick={() => { setShowDropdown(false); navigate('/settings'); }} className="dropdown-item">
-                ⚙️ Settings
-              </button>
               <button onClick={() => { setShowDropdown(false); navigate('/profile'); }} className="dropdown-item">
                 👤 Profile
               </button>
@@ -137,7 +209,7 @@ export default function Profile() {
             </div>
 
             <div className="profile-info">
-              <h1>{formData.firstName || formData.username || 'User'} {formData.lastName || ''}</h1>
+              <h1>{formData.username || 'User'}</h1>
               <p className="profile-username">@{formData.username || 'username'}</p>
               <p className="profile-email">{formData.email}</p>
             </div>
@@ -161,10 +233,10 @@ export default function Profile() {
                 </button>
               ) : (
                 <>
-                  <button className="primary-button" onClick={handleSaveProfile}>
-                    Save Changes
+                  <button className="primary-button" onClick={handleSaveProfile} disabled={loading}>
+                    {loading ? 'Saving...' : 'Save Changes'}
                   </button>
-                  <button className="secondary-button" onClick={handleCancel}>
+                  <button className="secondary-button" onClick={handleCancel} disabled={loading}>
                     Cancel
                   </button>
                 </>
@@ -180,129 +252,84 @@ export default function Profile() {
                 <h2>Profile Information</h2>
               </div>
               <div className="card-body">
-                <div className="form-group">
-                  <label>First Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      placeholder="Enter first name"
-                    />
-                  ) : (
-                    <div className="form-value">{formData.firstName || 'Not set'}</div>
-                  )}
-                </div>
 
-                <div className="form-group">
-                  <label>Last Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      placeholder="Enter last name"
-                    />
-                  ) : (
-                    <div className="form-value">{formData.lastName || 'Not set'}</div>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label>Username</label>
+                {/* Username Field */}
+                <div className="profile-field">
+                  <label className="field-label">Username</label>
                   {isEditing ? (
                     <input
                       type="text"
                       name="username"
                       value={formData.username}
                       onChange={handleInputChange}
+                      className="field-input"
                       placeholder="Enter username"
+                      disabled
                     />
                   ) : (
-                    <div className="form-value">{formData.username || 'Not set'}</div>
+                    <div className="field-display">{formData.username || 'Not set'}</div>
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label>Email</label>
-                  <div className="form-value">{formData.email}</div>
-                  {isEditing && <small className="form-hint">Email cannot be changed here</small>}
+                {/* Email Field */}
+                <div className="profile-field">
+                  <label className="field-label">Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    className="field-input"
+                    disabled
+                  />
                 </div>
 
-                <div className="form-group">
-                  <label>Phone</label>
+                {/* Phone Field */}
+                <div className="profile-field">
+                  <label className="field-label">Phone</label>
                   {isEditing ? (
                     <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
+                      className="field-input"
                       placeholder="Enter phone number"
                     />
                   ) : (
-                    <div className="form-value">{formData.phone || 'Not set'}</div>
+                    <div className="field-display">{formData.phone || 'Not set'}</div>
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label>Bio</label>
+                {/* Bio Field */}
+                <div className="profile-field">
+                  <label className="field-label">Bio</label>
                   {isEditing ? (
                     <textarea
                       name="bio"
                       value={formData.bio}
                       onChange={handleInputChange}
+                      className="field-textarea"
                       placeholder="Tell us about yourself"
                       rows="3"
                     />
                   ) : (
-                    <div className="form-value">{formData.bio || 'No bio yet'}</div>
+                    <div className="field-display">{formData.bio || 'Not set'}</div>
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label>Company</label>
+                {/* Company Field */}
+                <div className="profile-field">
+                  <label className="field-label">Company</label>
                   {isEditing ? (
                     <input
                       type="text"
                       name="company"
                       value={formData.company}
                       onChange={handleInputChange}
+                      className="field-input"
                       placeholder="Enter company name"
                     />
                   ) : (
-                    <div className="form-value">{formData.company || 'Not set'}</div>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label>Location</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      placeholder="Enter your location"
-                    />
-                  ) : (
-                    <div className="form-value">{formData.location || 'Not set'}</div>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label>Website</label>
-                  {isEditing ? (
-                    <input
-                      type="url"
-                      name="website"
-                      value={formData.website}
-                      onChange={handleInputChange}
-                      placeholder="https://example.com"
-                    />
-                  ) : (
-                    <div className="form-value">{formData.website || 'Not set'}</div>
+                    <div className="field-display">{formData.company || 'Not set'}</div>
                   )}
                 </div>
               </div>

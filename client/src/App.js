@@ -5,7 +5,6 @@ import Signup from './Pages/Signup';
 import Dashboard from './Pages/Dashboard';
 import BudgetEntry from './Pages/BudgetEntry';
 import BudgetEntriesDisplay from './Pages/BudgetEntriesDisplay';
-import Settings from './Pages/Settings';
 import Profile from './Pages/Profile';
 import Home from './Pages/Home';
 import './App.css';
@@ -32,7 +31,6 @@ function App() {
         <Route path="/inventory-logs" element={<InventoryLogDisplay />} />
         <Route path="/payroll-entry" element={<PayrollEntry />} />
         <Route path="/payroll" element={<PayrollDisplay />} />
-        <Route path="/settings" element={<Settings />} />
         <Route path="/profile" element={<Profile />} />
         
       </Routes>

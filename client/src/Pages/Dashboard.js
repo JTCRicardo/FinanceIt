@@ -262,9 +262,6 @@ export default function Dashboard() {
                 <div className="dropdown-username">{user?.username || 'User'}</div>
                 <div className="dropdown-email">{user?.emailAddresses?.[0]?.emailAddress}</div>
               </div>
-              <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/settings'); }}>
-                ⚙️ Settings
-              </button>
               <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/profile'); }}>
                 👤 Profile
               </button>

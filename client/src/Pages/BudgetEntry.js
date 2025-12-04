@@ -73,7 +73,7 @@ export default function BudgetEntry() {
 
     try {
       const token = await getToken();
-      
+      //this is not the beset way to fetch data and can be fixed if website is ever fineTuned
       const response = await fetch('http://localhost:5001/api/budget-entries', {
         method: 'POST',
         headers: {
